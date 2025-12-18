@@ -1,14 +1,49 @@
 [project]
 name = "omr-bubble-sheet-marker"
 version = "0.1.0"
-description = "Offline OMR bubble marker for answer sheets (PDF/Image) using OpenCV and PyMuPDF."
+description = "Offline, deterministic OMR bubble marker for multiple-choice answer sheets (PDF/Image) using OpenCV and PyMuPDF."
 readme = "README.md"
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Matin Shahabadi", email = "me@matinshahabadi.ir" },
+]
+keywords = [
+  "omr",
+  "opencv",
+  "pymupdf",
+  "pdf",
+  "answer-sheet",
+  "bubble-sheet",
+  "document-processing",
+  "computer-vision",
+  "offline",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Multimedia :: Graphics",
+  "Topic :: Scientific/Engineering :: Image Processing",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Utilities",
+]
 dependencies = [
   "numpy>=1.24",
   "opencv-python>=4.8",
   "PyMuPDF>=1.23",
 ]
+
+[project.urls]
+Homepage = "https://github.com/power0matin/omr-bubble-sheet-marker"
+Repository = "https://github.com/power0matin/omr-bubble-sheet-marker"
+Issues = "https://github.com/power0matin/omr-bubble-sheet-marker/issues"
 
 [project.scripts]
 omr-mark = "omr_marker.mark_answers:main"
@@ -25,5 +60,13 @@ target-version = "py310"
 select = ["E", "F", "I", "B", "UP"]
 ignore = []
 
+[tool.ruff.lint.isort]
+known-first-party = ["omr_marker"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-q"
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
