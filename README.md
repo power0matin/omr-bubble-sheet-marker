@@ -1,5 +1,11 @@
 # OMR Bubble Sheet Marker (Offline)
 
+<p align="center">
+  <strong>Languages:</strong>
+  <a href="./README.md">English</a> ·
+  <a href="./README.fa.md">فارسی</a>
+</p>
+
 [![CI](https://github.com/power0matin/omr-bubble-sheet-marker/actions/workflows/ci.yml/badge.svg)](https://github.com/power0matin/omr-bubble-sheet-marker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
