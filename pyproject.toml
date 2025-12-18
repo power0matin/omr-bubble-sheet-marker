@@ -46,7 +46,7 @@ Repository = "https://github.com/power0matin/omr-bubble-sheet-marker"
 Issues = "https://github.com/power0matin/omr-bubble-sheet-marker/issues"
 
 [project.scripts]
-omr-mark = "omr_marker.mark_answers:main"
+omr-mark = "omr-bubble-sheet-marker.mark_answers:main"
 
 [tool.black]
 line-length = 100
@@ -61,7 +61,8 @@ select = ["E", "F", "I", "B", "UP"]
 ignore = []
 
 [tool.ruff.lint.isort]
-known-first-party = ["omr_marker"]
+known-first-party = ["omr-bubble-sheet-marker"]
+known-third-party = ["cv2", "fitz", "numpy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
