@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 """
 mark_answers.py
@@ -18,19 +17,17 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-import sys
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
 
+import cv2
 import fitz  # PyMuPDF
 import numpy as np
-import cv2
 
 
 # -----------------------------
 # Answer key (question -> option 1..4)
 # -----------------------------
-ANSWER_KEY: Dict[int, int] = {
+ANSWER_KEY: dict[int, int] = {
     1: 1,
     2: 4,
     3: 4,
@@ -69,8 +66,8 @@ ANSWER_KEY: Dict[int, int] = {
 # -----------------------------
 @dataclass(frozen=True)
 class Bubble:
-    bbox: Tuple[int, int, int, int]  # x, y, w, h in pixels
-    center: Tuple[float, float]  # cx, cy in pixels
+    bbox: tuple[int, int, int, int]
+    center: tuple[float, float]
     area: float
     circularity: float
 
@@ -78,7 +75,7 @@ class Bubble:
 @dataclass(frozen=True)
 class QuestionRow:
     question_number: int
-    bubbles: List[Bubble]  # length 4, sorted left->right (options 1..4)
+    bubbles: list[Bubble]
 
 
 @dataclass
@@ -114,7 +111,7 @@ class Config:
 
     # Debug
     debug: bool = False
-    debug_dir: Optional[str] = None
+    debug_dir: str | None = None
 
 
 # -----------------------------
@@ -150,7 +147,7 @@ def clamp(v: int, lo: int, hi: int) -> int:
     return max(lo, min(hi, v))
 
 
-def bgr_red() -> Tuple[int, int, int]:
+def bgr_red() -> tuple[int, int, int]:
     # Pure red in RGB is #FF0000 -> in OpenCV BGR: (0,0,255)
     return (0, 0, 255)
 
@@ -198,17 +195,13 @@ def preprocess_for_contours(img_bgr: np.ndarray, cfg: Config) -> np.ndarray:
     if cfg.morph_open_ksize > 0:
         k_open = max(1, cfg.morph_open_ksize)
         kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_open, k_open))
-        th = cv2.morphologyEx(
-            th, cv2.MORPH_OPEN, kernel_open, iterations=cfg.morph_open_iters
-        )
+        th = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel_open, iterations=cfg.morph_open_iters)
 
     # Morph close to connect small gaps in bubble edges
     if cfg.morph_close_ksize > 0:
         k_close = max(1, cfg.morph_close_ksize)
         kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_close, k_close))
-        th = cv2.morphologyEx(
-            th, cv2.MORPH_CLOSE, kernel_close, iterations=cfg.morph_close_iters
-        )
+        th = cv2.morphologyEx(th, cv2.MORPH_CLOSE, kernel_close, iterations=cfg.morph_close_iters)
 
     return th
 
@@ -222,11 +215,11 @@ def contour_circularity(area: float, perimeter: float) -> float:
     return float(4.0 * np.pi * area / (perimeter * perimeter))
 
 
-def detect_bubbles(img_bgr: np.ndarray, cfg: Config) -> List[Bubble]:
+def detect_bubbles(img_bgr: np.ndarray, cfg: Config) -> list[Bubble]:
     bin_img = preprocess_for_contours(img_bgr, cfg)
     contours, _ = cv2.findContours(bin_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    bubbles: List[Bubble] = []
+    bubbles: list[Bubble] = []
     for cnt in contours:
         area = float(cv2.contourArea(cnt))
         if area < cfg.min_area or area > cfg.max_area:
@@ -252,9 +245,7 @@ def detect_bubbles(img_bgr: np.ndarray, cfg: Config) -> List[Bubble]:
 
         cx = float(x + w / 2.0)
         cy = float(y + h / 2.0)
-        bubbles.append(
-            Bubble(bbox=(x, y, w, h), center=(cx, cy), area=area, circularity=circ)
-        )
+        bubbles.append(Bubble(bbox=(x, y, w, h), center=(cx, cy), area=area, circularity=circ))
 
     if not bubbles:
         logging.warning("No bubbles detected (after filtering).")
@@ -267,18 +258,9 @@ def detect_bubbles(img_bgr: np.ndarray, cfg: Config) -> List[Bubble]:
 # -----------------------------
 # 1D clustering (deterministic, threshold-based)
 # -----------------------------
-def cluster_1d_sorted(
-    values_with_ids: List[Tuple[float, int]], thresh: float
-) -> List[List[int]]:
-    """
-    values_with_ids must be sorted by value asc.
-    Returns clusters as lists of ids.
-    """
-    clusters: List[List[int]] = []
-    if not values_with_ids:
-        return clusters
-
-    current: List[int] = [values_with_ids[0][1]]
+def cluster_1d_sorted(values_with_ids: list[tuple[float, int]], thresh: float) -> list[list[int]]:
+    clusters: list[list[int]] = []
+    current: list[int] = [values_with_ids[0][1]]
     last_val = values_with_ids[0][0]
 
     for v, idx in values_with_ids[1:]:
@@ -296,26 +278,24 @@ def cluster_1d_sorted(
 # -----------------------------
 # Layout grouping
 # -----------------------------
-def estimate_median_diameter(bubbles: List[Bubble]) -> float:
+def estimate_median_diameter(bubbles: list[Bubble]) -> float:
     ds = [0.5 * (b.bbox[2] + b.bbox[3]) for b in bubbles]
     return float(np.median(ds)) if ds else 0.0
 
 
 def compute_cluster_means(
-    bubbles: List[Bubble], clusters: List[List[int]], axis: str
-) -> List[float]:
-    means: List[float] = []
+    bubbles: list[Bubble], clusters: list[list[int]], axis: str
+) -> list[float]:
+    means: list[float] = []
     for ids in clusters:
-        vals = [
-            (bubbles[i].center[0] if axis == "x" else bubbles[i].center[1]) for i in ids
-        ]
+        vals = [(bubbles[i].center[0] if axis == "x" else bubbles[i].center[1]) for i in ids]
         means.append(float(np.mean(vals)) if vals else 0.0)
     return means
 
 
 def split_x_clusters_into_columns(
-    x_clusters: List[List[int]], x_means: List[float], median_d: float, cfg: Config
-) -> List[List[int]]:
+    x_clusters: list[list[int]], x_means: list[float], median_d: float, cfg: Config
+) -> list[list[int]]:
     """
     x_clusters are option-position clusters (many across columns).
     We detect big gaps between consecutive x cluster means to split into column segments,
@@ -332,10 +312,7 @@ def split_x_clusters_into_columns(
     order = np.argsort(np.array(x_means)).tolist()
     x_means_sorted = [x_means[i] for i in order]
 
-    gaps = [
-        x_means_sorted[i + 1] - x_means_sorted[i]
-        for i in range(len(x_means_sorted) - 1)
-    ]
+    gaps = [x_means_sorted[i + 1] - x_means_sorted[i] for i in range(len(x_means_sorted) - 1)]
     if not gaps:
         return []
 
@@ -344,13 +321,13 @@ def split_x_clusters_into_columns(
         cfg.column_gap_factor * median_gap, cfg.column_gap_min_diam_factor * median_d
     )
 
-    boundaries: List[int] = []
+    boundaries: list[int] = []
     for i, g in enumerate(gaps):
         if g > big_gap_thresh:
             boundaries.append(i)
 
     # Create segments over sorted cluster indices
-    segments: List[List[int]] = []
+    segments: list[list[int]] = []
     start = 0
     for b in boundaries:
         seg = order[start : b + 1]
@@ -362,15 +339,11 @@ def split_x_clusters_into_columns(
         segments.append(tail)
 
     # Within each segment, chunk into groups of 4 x-clusters (options 1..4)
-    columns: List[List[int]] = []
+    columns: list[list[int]] = []
     for seg in segments:
-        seg_sorted = sorted(
-            seg, key=lambda ci: x_means[ci]
-        )  # left->right within segment
+        seg_sorted = sorted(seg, key=lambda ci: x_means[ci])  # left->right within segment
         if len(seg_sorted) < 4:
-            logging.warning(
-                "Segment too small for a column (size=%d). Skipping.", len(seg_sorted)
-            )
+            logging.warning("Segment too small for a column (size=%d). Skipping.", len(seg_sorted))
             continue
 
         if len(seg_sorted) % 4 != 0:
@@ -392,8 +365,8 @@ def split_x_clusters_into_columns(
 
 
 def assign_questions(
-    bubbles: List[Bubble], cfg: Config, start_question_number: int = 1
-) -> Tuple[List[QuestionRow], int, Dict[int, int], Dict[int, int]]:
+    bubbles: list[Bubble], cfg: Config, start_question_number: int = 1
+) -> tuple[list[QuestionRow], int, dict[int, int], dict[int, int]]:
     """
     Returns:
       - question rows (in numbering order)
@@ -413,9 +386,7 @@ def assign_questions(
     y_thresh = max(1.0, cfg.y_cluster_thresh_factor * median_d)
 
     # Cluster by X into option-position peaks (across all columns)
-    x_vals = sorted(
-        [(bubbles[i].center[0], i) for i in range(len(bubbles))], key=lambda t: t[0]
-    )
+    x_vals = sorted([(bubbles[i].center[0], i) for i in range(len(bubbles))], key=lambda t: t[0])
     x_clusters = cluster_1d_sorted(x_vals, x_thresh)
     x_means = compute_cluster_means(bubbles, x_clusters, "x")
 
@@ -427,30 +398,24 @@ def assign_questions(
         return [], start_question_number, {}, {}
 
     # Determine columns as groups of 4 x-clusters
-    columns_xclusters = split_x_clusters_into_columns(
-        x_clusters, x_means, median_d, cfg
-    )
+    columns_xclusters = split_x_clusters_into_columns(x_clusters, x_means, median_d, cfg)
     if not columns_xclusters:
         return [], start_question_number, {}, {}
 
     # Map each x_cluster_index to column_index
-    xcluster_to_col: Dict[int, int] = {}
-    for col_idx, col in enumerate(
-        sorted(columns_xclusters, key=lambda c: x_means[c[0]])
-    ):
+    xcluster_to_col: dict[int, int] = {}
+    for col_idx, col in enumerate(sorted(columns_xclusters, key=lambda c: x_means[c[0]])):
         for xc in col:
             xcluster_to_col[xc] = col_idx
 
     # Map bubble -> x_cluster_index (by membership)
-    bubble_to_xcluster: Dict[int, int] = {}
+    bubble_to_xcluster: dict[int, int] = {}
     for xc_idx, ids in enumerate(x_clusters):
         for bi in ids:
             bubble_to_xcluster[bi] = xc_idx
 
     # Collect bubbles per column
-    col_bubble_indices: List[List[int]] = [
-        [] for _ in range(max(xcluster_to_col.values()) + 1)
-    ]
+    col_bubble_indices: list[list[int]] = [[] for _ in range(max(xcluster_to_col.values()) + 1)]
     for bi in range(len(bubbles)):
         xc = bubble_to_xcluster.get(bi)
         if xc is None:
@@ -461,15 +426,13 @@ def assign_questions(
         col_bubble_indices[col_idx].append(bi)
 
     # For each column, cluster by Y into rows (questions)
-    question_rows: List[QuestionRow] = []
+    question_rows: list[QuestionRow] = []
     qnum = start_question_number
 
     for col_idx in range(len(col_bubble_indices)):
         bis = col_bubble_indices[col_idx]
         if len(bis) < 4:
-            logging.warning(
-                "Column %d has too few bubbles (%d). Skipping.", col_idx, len(bis)
-            )
+            logging.warning("Column %d has too few bubbles (%d). Skipping.", col_idx, len(bis))
             continue
 
         y_vals = sorted([(bubbles[i].center[1], i) for i in bis], key=lambda t: t[0])
@@ -478,9 +441,7 @@ def assign_questions(
         # Sort y-clusters by mean y (top->bottom)
         y_means = []
         for ids in y_clusters:
-            y_means.append(
-                float(np.mean([bubbles[i].center[1] for i in ids])) if ids else 0.0
-            )
+            y_means.append(float(np.mean([bubbles[i].center[1] for i in ids])) if ids else 0.0)
         y_order = sorted(range(len(y_clusters)), key=lambda k: y_means[k])
 
         for yi in y_order:
@@ -524,8 +485,8 @@ def draw_filled_oval_pdf(
 def mark_pdf_page(
     doc: fitz.Document,
     page_index: int,
-    question_rows: List[QuestionRow],
-    answer_key: Dict[int, int],
+    question_rows: list[QuestionRow],
+    answer_key: dict[int, int],
     render_w_px: int,
     render_h_px: int,
     cfg: Config,
@@ -566,8 +527,8 @@ def mark_pdf_page(
 # -----------------------------
 def mark_image_bgr(
     img_bgr: np.ndarray,
-    question_rows: List[QuestionRow],
-    answer_key: Dict[int, int],
+    question_rows: list[QuestionRow],
+    answer_key: dict[int, int],
     cfg: Config,
 ) -> int:
     marked = 0
@@ -589,9 +550,7 @@ def mark_image_bgr(
         ax = max(1, ax)
         ay = max(1, ay)
 
-        cv2.ellipse(
-            img_bgr, (cx, cy), (ax, ay), 0.0, 0.0, 360.0, bgr_red(), thickness=-1
-        )
+        cv2.ellipse(img_bgr, (cx, cy), (ax, ay), 0.0, 0.0, 360.0, bgr_red(), thickness=-1)
         marked += 1
 
     return marked
@@ -601,7 +560,7 @@ def mark_image_bgr(
 # Debug visualization
 # -----------------------------
 def debug_render(
-    img_bgr: np.ndarray, question_rows: List[QuestionRow], page_tag: str, cfg: Config
+    img_bgr: np.ndarray, question_rows: list[QuestionRow], page_tag: str, cfg: Config
 ) -> None:
     if not cfg.debug:
         return
@@ -686,9 +645,7 @@ def process_pdf(input_path: str, output_path: str, cfg: Config) -> None:
         h, w = img_bgr.shape[:2]
 
         bubbles = detect_bubbles(img_bgr, cfg)
-        question_rows, qnum_next, _, _ = assign_questions(
-            bubbles, cfg, start_question_number=qnum
-        )
+        question_rows, qnum_next, _, _ = assign_questions(bubbles, cfg, start_question_number=qnum)
 
         debug_render(img_bgr, question_rows, page_tag=f"page_{pi+1}", cfg=cfg)
 
@@ -743,7 +700,10 @@ def process_image(input_path: str, output_path: str, cfg: Config) -> None:
 def build_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="mark_answers.py",
-        description="Offline OMR bubble marker: fills correct option bubbles (pure red) based on a fixed answer key.",
+        description=(
+            "Offline OMR bubble marker: fills correct option bubbles (pure red) "
+            "based on a fixed answer key."
+        ),
     )
     p.add_argument("input", help="Input PDF or image (PNG/JPG).")
     p.add_argument("output", help="Output PDF (preferred) or image path.")
@@ -795,12 +755,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     # Bubble filtering
-    p.add_argument(
-        "--min-area", type=int, default=300, help="Min contour area. Default: 300"
-    )
-    p.add_argument(
-        "--max-area", type=int, default=20000, help="Max contour area. Default: 20000"
-    )
+    p.add_argument("--min-area", type=int, default=300, help="Min contour area. Default: 300")
+    p.add_argument("--max-area", type=int, default=20000, help="Max contour area. Default: 20000")
     p.add_argument(
         "--aspect-min",
         type=float,
@@ -861,9 +817,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
     )
 
     # Debug
-    p.add_argument(
-        "--debug", action="store_true", help="Enable debug outputs (sidecar images)."
-    )
+    p.add_argument("--debug", action="store_true", help="Enable debug outputs (sidecar images).")
     p.add_argument(
         "--debug-dir",
         default=None,
@@ -899,7 +853,7 @@ def args_to_config(a: argparse.Namespace) -> Config:
     )
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = build_arg_parser()
     args = parser.parse_args(argv)
 
