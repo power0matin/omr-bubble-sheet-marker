@@ -345,4 +345,4 @@ pytest -q
 
 MIT — see [LICENSE](./LICENSE)
 
-[![Stargazers over time](https://starchart.cc/power0matin/discord-quest-auto-completer.svg?variant=adaptive)](https://starchart.cc/power0matin/discord-quest-auto-completer)
+[![Stargazers over time](https://starchart.cc/power0matin/omr-bubble-sheet-marker.svg?variant=adaptive)](https://starchart.cc/power0matin/omr-bubble-sheet-marker)
