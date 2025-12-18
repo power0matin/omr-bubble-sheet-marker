@@ -195,14 +195,22 @@ def preprocess_for_contours(img_bgr: np.ndarray, cfg: Config) -> np.ndarray:
     if cfg.morph_open_ksize > 0:
         k_open = max(1, cfg.morph_open_ksize)
         kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_open, k_open))
-        th = cv2.morphologyEx(th, cv2.MORPH_OPEN, kernel_open, iterations=cfg.morph_open_iters)
-
+        th = cv2.morphologyEx(
+            th,
+            cv2.MORPH_OPEN,
+            kernel_open,
+            iterations=cfg.morph_open_iters,
+        )
     # Morph close to connect small gaps in bubble edges
     if cfg.morph_close_ksize > 0:
         k_close = max(1, cfg.morph_close_ksize)
         kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (k_close, k_close))
-        th = cv2.morphologyEx(th, cv2.MORPH_CLOSE, kernel_close, iterations=cfg.morph_close_iters)
-
+        th = cv2.morphologyEx(
+            th,
+            cv2.MORPH_CLOSE,
+            kernel_close,
+            iterations=cfg.morph_close_iters,
+        )
     return th
 
 
@@ -471,7 +479,7 @@ def assign_questions(
 # PDF marking
 # -----------------------------
 def draw_filled_oval_pdf(
-    page: fitz.Page, rect: fitz.Rect, fill_rgb: Tuple[float, float, float]
+    page: fitz.Page, rect: fitz.Rect, fill_rgb: tuple[float, float, float]
 ) -> None:
     """
     Draw a filled oval on the PDF page using a shape (more control than direct draw_oval).
