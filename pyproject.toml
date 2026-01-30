@@ -59,7 +59,7 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
-ignore = []
+ignore = ["I001"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["omr_marker"]
