@@ -15,9 +15,9 @@ Constraints:
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
 import logging
 import os
-from dataclasses import dataclass
 
 import cv2
 import fitz
