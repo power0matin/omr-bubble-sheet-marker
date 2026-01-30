@@ -20,7 +20,7 @@ import os
 from dataclasses import dataclass
 
 import cv2
-import fitz  # PyMuPDF
+import fitz
 import numpy as np
 
 
