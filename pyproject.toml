@@ -45,6 +45,7 @@ Homepage = "https://github.com/power0matin/omr-bubble-sheet-marker"
 Repository = "https://github.com/power0matin/omr-bubble-sheet-marker"
 Issues = "https://github.com/power0matin/omr-bubble-sheet-marker/issues"
 
+# ✅ Entry point must reference a valid importable module (no hyphens)
 [project.scripts]
 omr-mark = "omr_marker.mark_answers:main"
 
@@ -62,7 +63,7 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["omr_marker"]
-known-third-party = ["cv2", "fitz", "numpy"]
+known-third-party = ["cv2", "numpy", "fitz"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -72,8 +73,9 @@ addopts = "-q"
 requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
 
+# ✅ src-layout packaging
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
