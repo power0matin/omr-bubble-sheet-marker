@@ -1,7 +1,7 @@
 [project]
 name = "omr-bubble-sheet-marker"
-version = "0.1.0"
-description = "Offline, deterministic OMR bubble marker for multiple-choice answer sheets (PDF/Image) using OpenCV and PyMuPDF."
+version = "0.2.0"
+description = "Offline, deterministic and robust OMR bubble marker for multiple-choice answer sheets (PDF/Image) using OpenCV and PyMuPDF."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
