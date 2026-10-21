@@ -347,6 +347,10 @@ pytest -q
 -   [ ] Optional deskew (non-ML) for mildly rotated scans
 -   [ ] Alternate numbering schemes (row-major / custom layouts)
 -   [ ] Golden test fixtures (synthetic sheets) for regression testing
+-   [ ] 
+## License
+
+MIT — see [LICENSE](./LICENSE)
 
 ## 📬 Contact
 
@@ -357,11 +361,6 @@ pytest -q
 -   GitHub: [power0matin](https://github.com/power0matin)
 -   LinkedIn: [matin-shahabadi](https://www.linkedin.com/in/matin-shahabadi)
 
-## License
-
-MIT — see [LICENSE](./LICENSE)
-
-[![Stargazers over time](https://starchart.cc/power0matin/omr-bubble-sheet-marker.svg?variant=adaptive)](https://starchart.cc/power0matin/omr-bubble-sheet-marker)
 
 <p align="center">
   <b>If this helped you, consider giving it a star!</b><br>
@@ -378,7 +377,6 @@ MIT — see [LICENSE](./LICENSE)
   </a>
 </p>
 
-<!-- Made with [OSS Insight](https://ossinsight.io/) -->
 
 <p align="center">
   Created by <a href="https://github.com/power0matin">power0matin</a>
